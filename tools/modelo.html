@@ -10,10 +10,9 @@
     --fundo: #f5f3ee;
     --papel: #ffffff;
     --texto: #1c1b1a;
-    --suave: #6b6760;
+    --suave: #5c5852;
     --linha: #e2ded5;
-    --destaque: #4b2470;
-    --destaque-escuro: #3a1a58;
+    --destaque: {{COR_BOTAO}};
   }
   * { box-sizing: border-box; }
   body {
@@ -26,65 +25,61 @@
   main { max-width: 400px; margin: 0 auto; padding: 32px 20px 40px; }
   .para { margin: 0; font-size: 15px; color: var(--suave); }
   h1 { margin: 2px 0 22px; font-size: 30px; line-height: 1.1; font-weight: 700; letter-spacing: -0.02em; }
-  .qr {
-    background: var(--papel);
-    border: 1px solid var(--linha);
-    border-radius: 16px;
-    overflow: hidden;
+  button { font: inherit; cursor: pointer; }
+  button:focus-visible { outline: 3px solid var(--texto); outline-offset: 3px; }
+  #copiar {
+    display: block;
+    width: 100%;
+    min-height: 60px;
+    padding: 8px 16px;
+    border: 2px solid var(--destaque);
+    border-radius: 12px;
+    background: var(--destaque);
+    color: #fff;
+    font-size: 18px;
+    font-weight: 600;
   }
-  .qr svg { display: block; width: 100%; height: auto; }
+  #copiar:active { filter: brightness(0.85); }
+  #copiar.ok { background: var(--papel); color: var(--destaque); filter: none; font-size: 16px; line-height: 1.2; }
+  .valor { margin: 12px 0 0; font-size: 15px; color: var(--suave); text-align: center; }
   .chave {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
     gap: 12px;
-    margin: 20px 0;
+    width: 100%;
+    margin: 24px 0 0;
     padding: 14px 2px;
+    border: 0;
     border-top: 1px solid var(--linha);
     border-bottom: 1px solid var(--linha);
+    background: none;
+    color: inherit;
+    text-align: left;
   }
   .chave span { font-size: 15px; color: var(--suave); }
   .chave strong { font-size: 19px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
-  button {
-    display: block;
-    width: 100%;
-    min-height: 60px;
-    border: 2px solid var(--destaque);
-    border-radius: 12px;
-    background: var(--destaque);
-    color: #fff;
-    font: inherit;
-    font-size: 18px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-  button:active { background: var(--destaque-escuro); border-color: var(--destaque-escuro); }
-  button.ok { background: var(--papel); color: var(--destaque); }
-  button:focus-visible { outline: 3px solid var(--texto); outline-offset: 3px; }
-  .dica { margin: 14px 4px 0; font-size: 15px; color: var(--suave); text-align: center; text-wrap: balance; }
+  .confira { margin: 10px 2px 0; font-size: 15px; color: var(--suave); }
+  figure { margin: 32px auto 0; max-width: 200px; text-align: center; }
+  .qr { background: var(--papel); border: 1px solid var(--linha); border-radius: 12px; overflow: hidden; }
+  .qr svg { display: block; width: 100%; height: auto; }
+  figcaption { margin-top: 8px; font-size: 15px; color: var(--suave); }
 </style>
 </head>
 <body>
 <main>
   <p class="para">Pix para</p>
   <h1>Rafael Costa</h1>
-  <div class="qr">{{QR}}</div>
-  <div class="chave"><span>Chave (celular)</span><strong>{{CHAVE}}</strong></div>
-  <button type="button" id="copiar" data-pix="{{PAYLOAD}}">Copiar código Pix</button>
-  <p class="dica">No app do banco, escolha Pix Copia e Cola e cole o código.</p>
+  <button type="button" id="copiar" data-chave="{{CHAVE_COPIA}}">Copiar chave Pix</button>
+  <p class="valor">Você digita o valor no app do banco.</p>
+  <button type="button" class="chave" id="chave" data-chave="{{CHAVE_COPIA}}"><span>Chave (celular)</span><strong>{{CHAVE}}</strong></button>
+  <p class="confira">No app, confira se aparece {{NOME_NO_BANCO}}.</p>
+  <figure>
+    <div class="qr">{{QR}}</div>
+    <figcaption>Para pagar de outro aparelho</figcaption>
+  </figure>
 </main>
 <script>
-  var botao = document.getElementById('copiar');
-  var timer;
-  function copiado() {
-    botao.textContent = 'Copiado';
-    botao.classList.add('ok');
-    clearTimeout(timer);
-    timer = setTimeout(function () {
-      botao.textContent = 'Copiar código Pix';
-      botao.classList.remove('ok');
-    }, 2000);
-  }
   function copiarAntigo(texto) {
     var campo = document.createElement('textarea');
     campo.value = texto;
@@ -97,13 +92,37 @@
     document.body.removeChild(campo);
     return ok;
   }
-  botao.addEventListener('click', function () {
-    var texto = botao.dataset.pix;
+  function copiar(texto, feito) {
     if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard.writeText(texto).then(copiado, function () { if (copiarAntigo(texto)) copiado(); });
+      navigator.clipboard.writeText(texto).then(feito, function () { if (copiarAntigo(texto)) feito(); });
     } else if (copiarAntigo(texto)) {
-      copiado();
+      feito();
     }
+  }
+
+  var botao = document.getElementById('copiar');
+  var timerBotao;
+  botao.addEventListener('click', function () {
+    copiar(botao.dataset.chave, function () {
+      botao.textContent = 'Copiado — agora cole no app do banco';
+      botao.classList.add('ok');
+      clearTimeout(timerBotao);
+      timerBotao = setTimeout(function () {
+        botao.textContent = 'Copiar chave Pix';
+        botao.classList.remove('ok');
+      }, 3000);
+    });
+  });
+
+  var chave = document.getElementById('chave');
+  var rotulo = chave.querySelector('span');
+  var timerChave;
+  chave.addEventListener('click', function () {
+    copiar(chave.dataset.chave, function () {
+      rotulo.textContent = 'Chave copiada';
+      clearTimeout(timerChave);
+      timerChave = setTimeout(function () { rotulo.textContent = 'Chave (celular)'; }, 3000);
+    });
   });
 </script>
 </body>

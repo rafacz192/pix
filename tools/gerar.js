@@ -5,6 +5,9 @@ import QRCode from 'qrcode';
 
 const CHAVE = '+5517991028063';
 const CHAVE_VISIVEL = '(17) 99102-8063';
+const CHAVE_COPIA = '17991028063'; // o que o toque na chave copia
+const NOME_NO_BANCO = 'Rafael Costa';
+const COR_BOTAO = '#4b2470';
 const NOME = 'RAFAEL COSTA'; // campo 59, até 25
 const CIDADE = 'S J RIO PRETO'; // campo 60, até 15
 
@@ -59,8 +62,10 @@ const svgInline = svg
 
 const html = readFileSync(new URL('modelo.html', import.meta.url), 'utf8')
   .replace('{{QR}}', svgInline)
-  .replace('{{PAYLOAD}}', payload)
-  .replace('{{CHAVE}}', CHAVE_VISIVEL);
+  .replace('{{CHAVE}}', CHAVE_VISIVEL)
+  .replaceAll('{{CHAVE_COPIA}}', CHAVE_COPIA)
+  .replace('{{NOME_NO_BANCO}}', NOME_NO_BANCO)
+  .replace('{{COR_BOTAO}}', COR_BOTAO);
 writeFileSync(new URL('../docs/index.html', import.meta.url), html);
 
 console.log(payload);
