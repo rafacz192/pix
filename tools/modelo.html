@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pix | 3D Print Labs</title>
+<link rel="icon" href="data:,">
+<style>
+  :root { --fundo: #fbfaf7; --texto: #1c1b1a; --suave: #5f5c57; --destaque: #4b2470; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--fundo);
+    color: var(--texto);
+    font: 17px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 420px; margin: 0 auto; padding: 28px 20px 40px; }
+  h1 { margin: 0 0 20px; font-size: 26px; font-weight: 700; letter-spacing: -0.01em; }
+  svg { display: block; width: 100%; height: auto; border: 1px solid #e3e0da; }
+  .chave { margin: 18px 0 16px; }
+  .chave span { display: block; font-size: 14px; color: var(--suave); }
+  .chave strong { font-size: 21px; font-variant-numeric: tabular-nums; }
+  button {
+    display: block;
+    width: 100%;
+    min-height: 58px;
+    border: 0;
+    border-radius: 6px;
+    background: var(--destaque);
+    color: #fff;
+    font: inherit;
+    font-weight: 600;
+    font-size: 18px;
+    cursor: pointer;
+  }
+  button:focus-visible { outline: 3px solid var(--texto); outline-offset: 2px; }
+  p { margin: 14px 0 0; color: var(--suave); }
+</style>
+</head>
+<body>
+<main>
+  <h1>3D Print Labs</h1>
+  {{QR}}
+  <div class="chave"><span>Chave Pix (celular)</span><strong>{{CHAVE}}</strong></div>
+  <button type="button" id="copiar" data-pix="{{PAYLOAD}}">Copiar código Pix</button>
+  <p>No app do banco, escolha Pix Copia e Cola e cole o código.</p>
+</main>
+<script>
+  var botao = document.getElementById('copiar');
+  var timer;
+  function copiado() {
+    botao.textContent = 'Copiado';
+    clearTimeout(timer);
+    timer = setTimeout(function () { botao.textContent = 'Copiar código Pix'; }, 2000);
+  }
+  function copiarAntigo(texto) {
+    var campo = document.createElement('textarea');
+    campo.value = texto;
+    campo.setAttribute('readonly', '');
+    campo.style.position = 'fixed';
+    campo.style.opacity = '0';
+    document.body.appendChild(campo);
+    campo.select();
+    var ok = document.execCommand('copy');
+    document.body.removeChild(campo);
+    return ok;
+  }
+  botao.addEventListener('click', function () {
+    var texto = botao.dataset.pix;
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(texto).then(copiado, function () { if (copiarAntigo(texto)) copiado(); });
+    } else if (copiarAntigo(texto)) {
+      copiado();
+    }
+  });
+</script>
+</body>
+</html>
